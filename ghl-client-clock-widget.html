@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GHL Live Clock</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1d23;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .card {
+    background: #22262f;
+    border: 1px solid #2e3340;
+    border-radius: 14px;
+    padding: 24px 28px;
+    width: 340px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #7c5cfc, #06b6d4);
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+
+  .client-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+
+  .client-location {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #1a1d23;
+    border: 1px solid #2e3340;
+    border-radius: 20px;
+    padding: 4px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.05em;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 5px #22c55e;
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Time */
+  .time-wrap {
+    text-align: center;
+    padding: 6px 0 14px;
+  }
+
+  .time-main {
+    font-size: 50px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-main .sec {
+    font-size: 30px;
+    font-weight: 600;
+    color: #7c5cfc;
+  }
+
+  .time-main .ampm {
+    font-size: 17px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+
+  .date-line {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 7px;
+    font-weight: 500;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: #2e3340;
+    margin: 2px 0 14px;
+  }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tz-text {
+    font-size: 10px;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div>
+      <div class="client-name" id="cName">Potomac Crown Dentistry</div>
+      <div class="client-location">📍 <span id="cLoc">Potomac, USA</span></div>
+    </div>
+    <div class="live-badge"><div class="dot"></div>LIVE</div>
+  </div>
+
+  <div class="time-wrap">
+    <div class="time-main">
+      <span id="hh">--</span>:<span id="mm">--</span><span class="sec">:<span id="ss">--</span></span><span class="ampm" id="ampm"></span>
+    </div>
+    <div class="date-line" id="dateLine">—</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="footer">
+    <div class="tz-text">🕐 <span id="tzLabel">—</span></div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIGURE HERE ──────────────────────────────
+  const CLIENT_NAME     = "Potomac Crown Dentistry";
+  const CLIENT_LOCATION = "Potomac, USA";
+  const TIMEZONE        = "America/New_York";   // Change per account
+  // ────────────────────────────────────────────────
+
+  document.getElementById('cName').textContent = CLIENT_NAME;
+  document.getElementById('cLoc').textContent  = CLIENT_LOCATION;
+
+  function tick() {
+    const now = new Date();
+    const f = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, ...opts }).format(now);
+
+    document.getElementById('hh').textContent   = f({ hour: '2-digit', hour12: true }).replace(/ (AM|PM)/,'').padStart(2,'0');
+    document.getElementById('mm').textContent   = f({ minute: '2-digit' }).padStart(2,'0');
+    document.getElementById('ss').textContent   = f({ second: '2-digit' }).padStart(2,'0');
+    document.getElementById('ampm').textContent = f({ hour: '2-digit', hour12: true }).slice(-2);
+    document.getElementById('dateLine').textContent = f({ weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    const tzAbbr = now.toLocaleTimeString('en-US',{ timeZone: TIMEZONE, timeZoneName:'short' }).split(' ').pop();
+    document.getElementById('tzLabel').textContent = `${TIMEZONE} (${tzAbbr})`;
+
+
+  }
+
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
