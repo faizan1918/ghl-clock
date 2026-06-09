@@ -34,7 +34,6 @@
     background: linear-gradient(90deg, #7c5cfc, #06b6d4);
   }
 
-  /* Header */
   .header {
     display: flex;
     justify-content: space-between;
@@ -48,13 +47,10 @@
     color: #f1f5f9;
   }
 
-  .client-location {
+  .client-tz {
     font-size: 11px;
     color: #6b7280;
     margin-top: 3px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
   }
 
   .live-badge {
@@ -69,6 +65,7 @@
     font-weight: 700;
     color: #6b7280;
     letter-spacing: 0.05em;
+    flex-shrink: 0;
   }
 
   .dot {
@@ -84,7 +81,6 @@
     50% { opacity: 0.3; }
   }
 
-  /* Time */
   .time-wrap {
     text-align: center;
     padding: 6px 0 14px;
@@ -120,14 +116,12 @@
     font-weight: 500;
   }
 
-  /* Divider */
   .divider {
     height: 1px;
     background: #2e3340;
     margin: 2px 0 14px;
   }
 
-  /* Footer */
   .footer {
     display: flex;
     justify-content: space-between;
@@ -137,66 +131,101 @@
   .tz-text {
     font-size: 10px;
     color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 4px;
   }
 
+  /* Error screen */
+  .error {
+    text-align: center;
+    padding: 10px 0;
+  }
 
+  .error p {
+    font-size: 12px;
+    color: #f87171;
+    margin-bottom: 8px;
+  }
+
+  .error code {
+    font-size: 11px;
+    color: #94a3b8;
+    background: #1a1d23;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: block;
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="header">
-    <div>
-      <div class="client-name" id="cName">Potomac Crown Dentistry</div>
-      <div class="client-location">📍 <span id="cLoc">Potomac, USA</span></div>
+  <div id="clockScreen">
+    <div class="header">
+      <div>
+        <div class="client-name" id="cName">—</div>
+        <div class="client-tz" id="cTz">—</div>
+      </div>
+      <div class="live-badge">
+        <div class="dot"></div>LIVE
+      </div>
     </div>
-    <div class="live-badge"><div class="dot"></div>LIVE</div>
+
+    <div class="time-wrap">
+      <div class="time-main">
+        <span id="hh">--</span>:<span id="mm">--</span><span class="sec">:<span id="ss">--</span></span><span class="ampm" id="ampm"></span>
+      </div>
+      <div class="date-line" id="dateLine">—</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="footer">
+      <div class="tz-text">🕐 <span id="tzFooter">—</span></div>
+    </div>
   </div>
 
-  <div class="time-wrap">
-    <div class="time-main">
-      <span id="hh">--</span>:<span id="mm">--</span><span class="sec">:<span id="ss">--</span></span><span class="ampm" id="ampm"></span>
-    </div>
-    <div class="date-line" id="dateLine">—</div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="footer">
-    <div class="tz-text">🕐 <span id="tzLabel">—</span></div>
+  <div id="errorScreen" style="display:none;" class="error">
+    <p>⚠️ Timezone not provided!</p>
+    <p style="font-size:11px; color:#64748b;">Add <strong style="color:#a78bfa;">?tz=</strong> parameter to URL:</p>
+    <code>...clock/?tz=America/New_York</code>
+    <code>...clock/?tz=America/Toronto</code>
   </div>
 </div>
 
 <script>
-  // ── CONFIGURE HERE ──────────────────────────────
-  const CLIENT_NAME     = "Potomac Crown Dentistry";
-  const CLIENT_LOCATION = "Potomac, USA";
-  const TIMEZONE        = "America/New_York";   // Change per account
-  // ────────────────────────────────────────────────
+  // Read URL parameters
+  const params   = new URLSearchParams(window.location.search);
+  const TIMEZONE = params.get('tz');
+  const NAME     = params.get('name') || 'Account Clock';
 
-  document.getElementById('cName').textContent = CLIENT_NAME;
-  document.getElementById('cLoc').textContent  = CLIENT_LOCATION;
+  if (!TIMEZONE) {
+    document.getElementById('clockScreen').style.display = 'none';
+    document.getElementById('errorScreen').style.display = 'block';
+  } else {
+    document.getElementById('cName').textContent = decodeURIComponent(NAME);
 
-  function tick() {
-    const now = new Date();
-    const f = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, ...opts }).format(now);
+    function tick() {
+      const now = new Date();
+      const f = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, ...opts }).format(now);
 
-    document.getElementById('hh').textContent   = f({ hour: '2-digit', hour12: true }).replace(/ (AM|PM)/,'').padStart(2,'0');
-    document.getElementById('mm').textContent   = f({ minute: '2-digit' }).padStart(2,'0');
-    document.getElementById('ss').textContent   = f({ second: '2-digit' }).padStart(2,'0');
-    document.getElementById('ampm').textContent = f({ hour: '2-digit', hour12: true }).slice(-2);
-    document.getElementById('dateLine').textContent = f({ weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      try {
+        document.getElementById('hh').textContent      = f({ hour: '2-digit', hour12: true }).replace(/ (AM|PM)/, '').padStart(2, '0');
+        document.getElementById('mm').textContent      = f({ minute: '2-digit' }).padStart(2, '0');
+        document.getElementById('ss').textContent      = f({ second: '2-digit' }).padStart(2, '0');
+        document.getElementById('ampm').textContent    = f({ hour: '2-digit', hour12: true }).slice(-2);
+        document.getElementById('dateLine').textContent = f({ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    const tzAbbr = now.toLocaleTimeString('en-US',{ timeZone: TIMEZONE, timeZoneName:'short' }).split(' ').pop();
-    document.getElementById('tzLabel').textContent = `${TIMEZONE} (${tzAbbr})`;
+        const tzAbbr = now.toLocaleTimeString('en-US', { timeZone: TIMEZONE, timeZoneName: 'short' }).split(' ').pop();
+        document.getElementById('cTz').textContent     = TIMEZONE;
+        document.getElementById('tzFooter').textContent = `${TIMEZONE} (${tzAbbr})`;
+      } catch(e) {
+        document.getElementById('clockScreen').style.display = 'none';
+        document.getElementById('errorScreen').style.display = 'block';
+      }
+    }
 
-
+    tick();
+    setInterval(tick, 1000);
   }
-
-  tick();
-  setInterval(tick, 1000);
 </script>
 </body>
 </html>
